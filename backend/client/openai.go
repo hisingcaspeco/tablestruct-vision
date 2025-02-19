@@ -51,19 +51,56 @@ func (c *OpenAIClient) SendImageToOpenAI(base64Image string) (string, error) {
 	prompt := `
 Analyze the provided blueprint, layout, or sketch of a restaurant. Identify the following objects:
 - Tables
-- Bars
 - Walls
-- Chairs
 - Doors
-- Windows
+- Text labels
+
+The response should map to this type of JSON structure:
+
+export enum TableMapItemType {
+  WALL,
+  DOOR,
+  WINDOW,
+  TABLE_RECT,
+  TABLE_ELLIPSE,
+  LABEL,
+  VIRTUAL,
+}
+
+export type TableRecord = {
+  templateId: number;
+  validFrom: string; // ISO 8601 date string
+  itemType: TableMapItemType;
+  positionX: number;
+  positionY: number;
+  sizeX: number;
+  sizeY: number;
+  tableName: string;
+  tableNumber: number;
+  articleId: number;
+  articleGroupId: number;
+  includedInResourcePool: boolean;
+  stockBalance: number;
+  departmentId?: string;
+  sortOrder: number;
+  chairs: number;
+  chairsMax: number;
+  sectionId: number;
+  webBookable: boolean;
+  isResourcePool: boolean;
+  unitId: number;
+  articleIds: string;
+  guestsMin: number;
+  priority: number;
+  rotate: number;
+  id: number;
+  doRemove: boolean;
+};
 
 Return the response as structured JSON:
 {
   "objects": [
-    { "type": "table", "x": 120, "y": 250, "width": 50, "height": 50 },
-    { "type": "bar", "x": 300, "y": 400, "width": 100, "height": 50 },
-    { "type": "wall", "x": 0, "y": 0, "width": 800, "height": 20 },
-    { "type": "chair", "x": 130, "y": 260, "width": 20, "height": 20 }
+    // list of TableRecord objects
   ]
 }`
 

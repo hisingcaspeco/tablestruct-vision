@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { Button, Group, Loader, Text, Textarea, Image, Center } from "@mantine/core";
+import { Dropzone } from "@mantine/dropzone";
+import {IconPhone, IconPhoto, IconUpload, IconX} from "@tabler/icons-react";
 
 export const ImageUpload: React.FC = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -8,9 +11,9 @@ export const ImageUpload: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     // Handle file selection & preview
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files.length > 0) {
-            const file = event.target.files[0];
+    const handleFileChange = (files: File[]) => {
+        if (files.length > 0) {
+            const file = files[0];
             setSelectedFile(file);
             setPreviewURL(URL.createObjectURL(file)); // Show preview
             setResponseJSON(null); // Reset previous response
@@ -18,7 +21,7 @@ export const ImageUpload: React.FC = () => {
         }
     };
 
-    // Handle form submission
+    // Handle file upload
     const handleUpload = async () => {
         if (!selectedFile) {
             setError("Please select an image first.");
@@ -43,7 +46,19 @@ export const ImageUpload: React.FC = () => {
             }
 
             const data = await res.json();
-            setResponseJSON(JSON.stringify(data, null, 2)); // Pretty-print JSON
+
+            // ✅ Parse JSON inside the response field if necessary
+            if (data.response) {
+                try {
+                    const parsedJson = JSON.parse(data.response);
+                    setResponseJSON(JSON.stringify(parsedJson, null, 2));
+                } catch (error) {
+                    console.error("Failed to parse JSON:", error);
+                    setResponseJSON("Invalid JSON format received.");
+                }
+            } else {
+                setResponseJSON("No response from server.");
+            }
         } catch (err) {
             setError((err as Error).message);
         } finally {
@@ -52,37 +67,85 @@ export const ImageUpload: React.FC = () => {
     };
 
     return (
-        <div className="container">
-            <h2>Upload a Restaurant Layout</h2>
+        <div style={{ maxWidth: 600, margin: "auto" }}>
+            <Text size="xl" w={500} align="center">
+                Upload a Restaurant Layout
+            </Text>
 
-            {/* File Input */}
-            <input type="file" accept="image/*" onChange={handleFileChange} />
+            {/* Dropzone for File Upload */}
+            <Dropzone
+                onDrop={handleFileChange}
+                accept={["image/png", "image/jpeg", "image/jpg", "image/gif", "image/svg+xml", "image/webp"]}
+                multiple={false}
+                maxSize={5 * 1024 * 1024} // 5MB max
+                style={{
+                    marginTop: 20,
+                    padding: 20,
+                    border: "2px dashed #1e88e5",
+                    borderRadius: 10,
+                    textAlign: "center",
+                }}
+            >
+                <Group justify="center" gap="xl" mih={220} style={{ pointerEvents: 'none' }}>
+                    <Dropzone.Accept>
+                        <IconUpload size={52} color="var(--mantine-color-blue-6)" stroke={1.5} />
+                    </Dropzone.Accept>
+                    <Dropzone.Reject>
+                        <IconX size={52} color="var(--mantine-color-red-6)" stroke={1.5} />
+                    </Dropzone.Reject>
+                    <Dropzone.Idle>
+                        <IconPhoto size={52} color="var(--mantine-color-dimmed)" stroke={1.5} />
+                    </Dropzone.Idle>
+
+                    <div>
+                        <Text size="xl" inline>
+                            Drag images here or click to select files
+                        </Text>
+                        <Text size="sm" c="dimmed" inline mt={7}>
+                            Attach as many files as you like, each file should not exceed 5mb
+                        </Text>
+                    </div>
+                </Group>
+            </Dropzone>
 
             {/* Image Preview */}
             {previewURL && (
-                <div className="preview-container">
-                    <h3>Preview:</h3>
-                    <img src={previewURL} alt="Preview" className="preview-image" />
-                </div>
+                <Center mt="md">
+                    <Image src={previewURL} alt="Preview" radius="md" width={300} />
+                </Center>
             )}
 
             {/* Upload Button */}
-            <button onClick={handleUpload} disabled={isLoading}>
-                {isLoading ? "Generating..." : "Upload & Analyze"}
-            </button>
+            <Group position="center" mt="md">
+                <Button onClick={handleUpload} disabled={isLoading}>
+                    {isLoading ? <Loader size="sm" /> : "Upload & Analyze"}
+                </Button>
+            </Group>
 
             {/* Loading Text */}
-            {isLoading && <p>Processing the image... Please wait.</p>}
+            {isLoading && (
+                <Text align="center" color="blue" mt="md">
+                    Processing the image... Please wait.
+                </Text>
+            )}
 
             {/* Error Message */}
-            {error && <p className="error">{error}</p>}
+            {error && (
+                <Text align="center" color="red" mt="md">
+                    {error}
+                </Text>
+            )}
 
             {/* JSON Output */}
             {responseJSON && (
-                <div>
-                    <h3>Detected Layout (JSON):</h3>
-                    <textarea readOnly value={responseJSON} className="json-output" />
-                </div>
+                <Textarea
+                    label="Detected Layout (JSON)"
+                    value={responseJSON}
+                    readOnly
+                    autosize
+                    minRows={6}
+                    style={{ marginTop: 20 }}
+                />
             )}
         </div>
     );
