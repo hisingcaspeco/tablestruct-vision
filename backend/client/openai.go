@@ -110,7 +110,55 @@ Return the response as structured JSON:
 	requestBody := OpenAIRequest{
 		Model: "gpt-4o", // Ensure we're using a vision-capable model
 		Messages: []Message{
-			{Role: "system", Content: "You are an expert in analyzing restaurant layouts."},
+			{Role: "system", Content: "You are an expert in analyzing restaurant layouts. You will get a blueprint or a sketch of a restaurant and need to identify tables, walls, doors, and text labels. You will get 4 examples to learn from."},
+			{Role: "user", Content: []map[string]any{
+				{
+					"type": "image_url",
+					"image_url": map[string]string{
+						"url": "https://yetric.se/hackathon/floor.jpg",
+					}},
+				{
+					"type": "text",
+					"text": "In this image I have annotated the tables, chairs, walls, and text labels. Walls are marked with red lines, Tables are marked with blue marking, chairs are marked with green marking, and text labels are marked with yellow marking. Please identify these objects in the image.",
+				},
+			},
+			},
+			{Role: "user", Content: []map[string]any{
+				{
+					"type": "image_url",
+					"image_url": map[string]string{
+						"url": "https://yetric.se/hackathon/hattmakarn.jpg",
+					}},
+				{
+					"type": "text",
+					"text": "In this image I have annotated the tables, chairs, walls, and text labels. Walls are marked with red lines, Tables are marked with blue marking, chairs are marked with green marking, and text labels are marked with yellow marking. Please identify these objects in the image.",
+				},
+			},
+			},
+			{Role: "user", Content: []map[string]any{
+				{
+					"type": "image_url",
+					"image_url": map[string]string{
+						"url": "https://yetric.se/hackathon/hh.jpg",
+					}},
+				{
+					"type": "text",
+					"text": "In this image I have annotated the tables, chairs, walls, and text labels. Walls are marked with red lines, Tables are marked with blue marking, chairs are marked with green marking, and text labels are marked with yellow marking. Please identify these objects in the image.",
+				},
+			},
+			},
+			{Role: "user", Content: []map[string]any{
+				{
+					"type": "image_url",
+					"image_url": map[string]string{
+						"url": "https://yetric.se/hackathon/matsal.jpg",
+					}},
+				{
+					"type": "text",
+					"text": "In this image I have annotated the tables, chairs, walls, and text labels. Walls are marked with red lines, Tables are marked with blue marking, chairs are marked with green marking, and text labels are marked with yellow marking. Please identify these objects in the image.",
+				},
+			},
+			},
 			{Role: "user", Content: prompt}, // Requesting structured JSON
 			{Role: "user", Content: []map[string]any{
 				{
