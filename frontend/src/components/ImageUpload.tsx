@@ -97,23 +97,24 @@ export const ImageUpload: React.FC = () => {
                         <IconPhoto size={52} color="var(--mantine-color-dimmed)" stroke={1.5} />
                     </Dropzone.Idle>
 
-                    <div>
+                    {previewURL ? (
+                        <Center mt="md">
+                            <Image src={previewURL} alt="Preview" radius="md" width={300} />
+                        </Center>
+                    ) : (<div>
                         <Text size="xl" inline>
                             Drag images here or click to select files
                         </Text>
                         <Text size="sm" c="dimmed" inline mt={7}>
                             Attach as many files as you like, each file should not exceed 5mb
                         </Text>
-                    </div>
+                    </div>)}
+
+
                 </Group>
             </Dropzone>
 
             {/* Image Preview */}
-            {previewURL && (
-                <Center mt="md">
-                    <Image src={previewURL} alt="Preview" radius="md" width={300} />
-                </Center>
-            )}
 
             {/* Upload Button */}
             <Group position="center" mt="md">

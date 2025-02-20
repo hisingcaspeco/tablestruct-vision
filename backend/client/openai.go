@@ -49,7 +49,7 @@ type OpenAIResponse struct {
 // SendImageToOpenAI detects tables, bars, walls, etc., and returns JSON
 func (c *OpenAIClient) SendImageToOpenAI(base64Image string) (string, error) {
 	prompt := `
-Analyze the provided blueprint, layout, or sketch of a restaurant. Identify the following objects:
+Now analyze this new layout. Identify the following objects:
 - Tables
 - Walls
 - Doors
@@ -70,7 +70,7 @@ export enum TableMapItemType {
 export type TableRecord = {
   templateId: number;
   validFrom: string; // ISO 8601 date string
-  itemType: TableMapItemType;
+  itemType: TableMapItemType; // set WALL to 0, DOOR to 1, WINDOW to 2, TABLE_RECT to 3, TABLE_ELLIPSE to 4, LABEL to 5, VIRTUAL to 6
   positionX: number;
   positionY: number;
   sizeX: number;
@@ -97,6 +97,9 @@ export type TableRecord = {
   doRemove: boolean;
 };
 
+if WALL - positionX + positionY = koordinat där väggen börjar.
+if WALL - sizeX + sizeY = koordinat där väggen slutar.
+
 Return the response as structured JSON:
 {
   "objects": [
@@ -111,15 +114,31 @@ Return the response as structured JSON:
 		Model: "gpt-4o", // Ensure we're using a vision-capable model
 		Messages: []Message{
 			{Role: "system", Content: "You are an expert in analyzing restaurant layouts. You will get a blueprint or a sketch of a restaurant and need to identify tables, walls, doors, and text labels. You will get 4 examples to learn from."},
-			{Role: "user", Content: []map[string]any{
+			/*{Role: "user", Content: []map[string]any{
 				{
 					"type": "image_url",
 					"image_url": map[string]string{
-						"url": "https://yetric.se/hackathon/floor.jpg",
+						"url": "https://yetric.se/floor.jpg",
 					}},
 				{
 					"type": "text",
 					"text": "In this image I have annotated the tables, chairs, walls, and text labels. Walls are marked with red lines, Tables are marked with blue marking, chairs are marked with green marking, and text labels are marked with yellow marking. Please identify these objects in the image.",
+				},
+
+			},
+			},*/
+			{Role: "user", Content: []map[string]any{
+				{
+					"type": "image_url",
+					"image_url": map[string]string{
+						"url": "https://yetric.se/hattmakarn.jpg",
+					}},
+				{
+					"type": "text",
+					"text": "In this image I have annotated the tables, chairs, walls, and text labels. Walls are marked with red lines, Tables are marked with blue marking, chairs are marked with green marking, and text labels are marked with yellow marking. Please identify these objects in the image." +
+						"Expected JSON-output:" +
+						"```json" +
+						"{\n  \"objects\": [\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"WALL\",\n      \"positionX\": 0,\n      \"positionY\": 0,\n      \"sizeX\": 1263,\n      \"sizeY\": 768,\n      \"id\": 1000,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"LABEL\",\n      \"positionX\": 650,\n      \"positionY\": 100,\n      \"sizeX\": 100,\n      \"sizeY\": 30,\n      \"tableName\": \"Entré\",\n      \"id\": 1001,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"LABEL\",\n      \"positionX\": 300,\n      \"positionY\": 400,\n      \"sizeX\": 100,\n      \"sizeY\": 30,\n      \"tableName\": \"Lounge\",\n      \"id\": 1002,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 150,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 1\",\n      \"tableNumber\": 1,\n      \"articleId\": 101,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 1,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2001,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 250,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 2\",\n      \"tableNumber\": 2,\n      \"articleId\": 102,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 2,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2002,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 350,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 3\",\n      \"tableNumber\": 3,\n      \"articleId\": 103,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 3,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2003,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 450,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 4\",\n      \"tableNumber\": 4,\n      \"articleId\": 104,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 4,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2004,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 650,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 42\",\n      \"tableNumber\": 42,\n      \"articleId\": 142,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 42,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2042,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 750,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 43\",\n      \"tableNumber\": 43,\n      \"articleId\": 143,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 43,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2043,\n      \"doRemove\": false\n    }\n  ]\n}\n",
 				},
 			},
 			},
@@ -127,38 +146,29 @@ Return the response as structured JSON:
 				{
 					"type": "image_url",
 					"image_url": map[string]string{
-						"url": "https://yetric.se/hackathon/hattmakarn.jpg",
+						"url": "https://yetric.se/hh.jpg",
 					}},
 				{
 					"type": "text",
-					"text": "In this image I have annotated the tables, chairs, walls, and text labels. Walls are marked with red lines, Tables are marked with blue marking, chairs are marked with green marking, and text labels are marked with yellow marking. Please identify these objects in the image.",
+					"text": "In this image I have annotated the tables, chairs, walls, and text labels. Walls are marked with red lines, Tables are marked with blue marking, chairs are marked with green marking, and text labels are marked with yellow marking. Please identify these objects in the image." +
+						"Expected JSON-output:" +
+						"```json" +
+						"{\n  \"objects\": [\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"WALL\",\n      \"positionX\": 0,\n      \"positionY\": 0,\n      \"sizeX\": 1263,\n      \"sizeY\": 768,\n      \"id\": 1000,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"LABEL\",\n      \"positionX\": 650,\n      \"positionY\": 100,\n      \"sizeX\": 100,\n      \"sizeY\": 30,\n      \"tableName\": \"Entré\",\n      \"id\": 1001,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"LABEL\",\n      \"positionX\": 300,\n      \"positionY\": 400,\n      \"sizeX\": 100,\n      \"sizeY\": 30,\n      \"tableName\": \"Lounge\",\n      \"id\": 1002,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 150,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 1\",\n      \"tableNumber\": 1,\n      \"articleId\": 101,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 1,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2001,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 250,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 2\",\n      \"tableNumber\": 2,\n      \"articleId\": 102,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 2,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2002,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 350,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 3\",\n      \"tableNumber\": 3,\n      \"articleId\": 103,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 3,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2003,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 450,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 4\",\n      \"tableNumber\": 4,\n      \"articleId\": 104,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 4,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2004,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 650,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 42\",\n      \"tableNumber\": 42,\n      \"articleId\": 142,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 42,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2042,\n      \"doRemove\": false\n    },\n    {\n      \"templateId\": 1,\n      \"validFrom\": \"2025-02-20T00:00:00Z\",\n      \"itemType\": \"TABLE_RECT\",\n      \"positionX\": 750,\n      \"positionY\": 200,\n      \"sizeX\": 60,\n      \"sizeY\": 60,\n      \"tableName\": \"Table 43\",\n      \"tableNumber\": 43,\n      \"articleId\": 143,\n      \"articleGroupId\": 10,\n      \"includedInResourcePool\": true,\n      \"stockBalance\": 1,\n      \"departmentId\": \"A\",\n      \"sortOrder\": 43,\n      \"chairs\": 4,\n      \"chairsMax\": 6,\n      \"sectionId\": 1,\n      \"webBookable\": true,\n      \"isResourcePool\": false,\n      \"unitId\": 1,\n      \"articleIds\": \"101,102\",\n      \"guestsMin\": 2,\n      \"priority\": 1,\n      \"rotate\": 0,\n      \"id\": 2043,\n      \"doRemove\": false\n    }\n  ]\n}\n" +,
 				},
 			},
 			},
-			{Role: "user", Content: []map[string]any{
+			/*{Role: "user", Content: []map[string]any{
 				{
 					"type": "image_url",
 					"image_url": map[string]string{
-						"url": "https://yetric.se/hackathon/hh.jpg",
+						"url": "https://yetric.se/matsal.jpg",
 					}},
 				{
 					"type": "text",
 					"text": "In this image I have annotated the tables, chairs, walls, and text labels. Walls are marked with red lines, Tables are marked with blue marking, chairs are marked with green marking, and text labels are marked with yellow marking. Please identify these objects in the image.",
 				},
 			},
-			},
-			{Role: "user", Content: []map[string]any{
-				{
-					"type": "image_url",
-					"image_url": map[string]string{
-						"url": "https://yetric.se/hackathon/matsal.jpg",
-					}},
-				{
-					"type": "text",
-					"text": "In this image I have annotated the tables, chairs, walls, and text labels. Walls are marked with red lines, Tables are marked with blue marking, chairs are marked with green marking, and text labels are marked with yellow marking. Please identify these objects in the image.",
-				},
-			},
-			},
+			},*/
 			{Role: "user", Content: prompt}, // Requesting structured JSON
 			{Role: "user", Content: []map[string]any{
 				{
